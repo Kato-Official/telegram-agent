@@ -44,8 +44,13 @@ async def lifespan(app: FastAPI):
     logger.info("Disconnecting Telegram Client...")
     await client.disconnect()
 
+from fastapi.staticfiles import StaticFiles
+
 # --- FastAPI App ---
 app = FastAPI(title="Telegram Agent API", lifespan=lifespan)
+
+# Mount the dashboard directory
+app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
 
 # --- Endpoints ---
 

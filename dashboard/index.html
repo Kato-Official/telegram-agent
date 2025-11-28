@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle DXB | Agent Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <!-- Auth Pages Container -->
+    <div id="auth-container" class="auth-container">
+        <!-- Login View -->
+        <div id="view-login" class="auth-view active">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="material-icons-round logo-icon">radio_button_checked</span>
+                    <h1>Welcome Back</h1>
+                    <p>Enter your credentials to access the agent.</p>
+                </div>
+                <form class="auth-form" onsubmit="event.preventDefault(); authManager.login();">
+                    <div class="form-group">
+                        <label>Email or Phone</label>
+                        <input type="text" placeholder="user@example.com" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" placeholder="••••••••" class="input-field">
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Sign In</button>
+
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+
+                    <button type="button" class="btn-secondary full-width google-btn"
+                        onclick="authManager.loginWithGoogle()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"
+                            width="18">
+                        Sign in with Google
+                    </button>
+
+                    <div style="margin-top: 10px; text-align: right;">
+                        <a href="#" style="font-size: 12px; color: var(--text-secondary); text-decoration: none;"
+                            onclick="app.switchAuth('forgot-password')">Forgot Password?</a>
+                    </div>
+                </form>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" onclick="app.switchAuth('signup')">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup View -->
+        <div id="view-signup" class="auth-view">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="material-icons-round logo-icon">radio_button_checked</span>
+                    <h1>Create Account</h1>
+                    <p>Set up your new agent workspace.</p>
+                </div>
+                <form class="auth-form" onsubmit="event.preventDefault(); authManager.signup();">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" placeholder="John Doe" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="user@example.com" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" placeholder="••••••••" class="input-field">
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Create Account</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" onclick="app.switchAuth('login')">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+        <!-- Forgot Password View -->
+        <div id="view-forgot-password" class="auth-view">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <span class="material-icons-round logo-icon">lock_reset</span>
+                    <h1>Reset Password</h1>
+                    <p>Enter your email to receive reset instructions.</p>
+                </div>
+                <form class="auth-form" onsubmit="event.preventDefault(); authManager.resetPassword();">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="reset-email" placeholder="user@example.com" class="input-field">
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Send Reset Link</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Remembered it? <a href="#" onclick="app.switchAuth('login')">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container (Hidden by default until login) -->
+    <div id="app-container" class="app-container hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="material-icons-round logo-icon">radio_button_checked</span>
+                <h1>Circle DXB</h1>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" onclick="app.navigate('dashboard')">
+                    <span class="material-icons-round">dashboard</span>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" onclick="app.navigate('groups')">
+                    <span class="material-icons-round">group_add</span>
+                    Groups
+                </a>
+                <a href="#" class="nav-item" onclick="app.navigate('chats')">
+                    <span class="material-icons-round">chat</span>
+                    Single Chats
+                </a>
+                <a href="#" class="nav-item" onclick="app.navigate('contacts')">
+                    <span class="material-icons-round">contacts</span>
+                    Contacts
+                </a>
+                <a href="#" class="nav-item" onclick="app.navigate('agents')">
+                    <span class="material-icons-round">smart_toy</span>
+                    AI Agents
+                </a>
+                <a href="#" class="nav-item" onclick="app.navigate('logs')">
+                    <span class="material-icons-round">dataset</span>
+                    Data & Logs
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">K</div>
+                <div class="user-info">
+                    <span class="name">Kato</span>
+                    <span class="status">Online</span>
+                </div>
+                <button class="icon-btn-small" onclick="authManager.logout()"><span
+                        class="material-icons-round">logout</span></button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 id="page-title">Overview</h2>
+                <div class="actions">
+                    <button class="icon-btn"><span class="material-icons-round">notifications</span></button>
+                    <button class="icon-btn" onclick="app.navigate('settings')"><span
+                            class="material-icons-round">settings</span></button>
+                </div>
+            </header>
+
+            <!-- View: Dashboard -->
+            <div id="view-dashboard" class="view-section active">
+                <div class="content-grid">
+                    <!-- Quick Actions -->
+                    <section class="card quick-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn primary" onclick="app.openModal('create-group')">
+                                <span class="material-icons-round">add_circle</span>
+                                Create New Group
+                            </button>
+                            <button class="action-btn secondary" onclick="app.openModal('add-contact')">
+                                <span class="material-icons-round">person_add</span>
+                                Add Contact
+                            </button>
+                            <button class="action-btn secondary">
+                                <span class="material-icons-round">download</span>
+                                Scrape Chat
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Stats -->
+                    <section class="card stats-card">
+                        <div class="stat-item">
+                            <span class="label">Active Groups</span>
+                            <span class="value">12</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Total Contacts</span>
+                            <span class="value">1,405</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">AI Models</span>
+                            <span class="value">3</span>
+                        </div>
+                    </section>
+
+                    <!-- Recent Activity -->
+                    <section class="card full-width activity-log">
+                        <div class="card-header">
+                            <h3>Recent Activity</h3>
+                            <span class="badge">Live</span>
+                        </div>
+                        <ul class="log-list">
+                            <li class="log-item">
+                                <span class="icon success"><span class="material-icons-round">check_circle</span></span>
+                                <div class="log-details">
+                                    <span class="log-title">Group "Crypto Whales" Created</span>
+                                    <span class="log-time">2 mins ago</span>
+                                </div>
+                            </li>
+                            <li class="log-item">
+                                <span class="icon info"><span class="material-icons-round">info</span></span>
+                                <div class="log-details">
+                                    <span class="log-title">Scraped 500 messages from @katodxb</span>
+                                    <span class="log-time">15 mins ago</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+
+            <!-- View: Groups -->
+            <div id="view-groups" class="view-section hidden">
+                <div class="section-header">
+                    <div class="search-bar">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" placeholder="Search groups...">
+                    </div>
+                    <button class="btn-primary" onclick="app.openModal('create-group')">New Group</button>
+                </div>
+                <div class="list-container">
+                    <!-- Placeholder List Items -->
+                    <div class="list-item">
+                        <div class="item-avatar group">CW</div>
+                        <div class="item-info">
+                            <h4>Crypto Whales</h4>
+                            <p>245 members • Last active 5m ago</p>
+                        </div>
+                        <button class="icon-btn"><span class="material-icons-round">more_vert</span></button>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-avatar group">AI</div>
+                        <div class="item-info">
+                            <h4>AI Researchers</h4>
+                            <p>1,200 members • Last active 1m ago</p>
+                        </div>
+                        <button class="icon-btn"><span class="material-icons-round">more_vert</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Single Chats -->
+            <div id="view-chats" class="view-section hidden">
+                <div class="section-header">
+                    <div class="search-bar">
+                        <span class="material-icons-round">search</span>
+                        <input type="text" placeholder="Search chats...">
+                    </div>
+                </div>
+                <div class="list-container">
+                    <div class="list-item">
+                        <div class="item-avatar">JD</div>
+                        <div class="item-info">
+                            <h4>John Doe</h4>
+                            <p>Hey, when is the meeting?</p>
+                        </div>
+                        <span class="time-stamp">10:42 AM</span>
+                    </div>
+                    <div class="list-item">
+                        <div class="item-avatar">AS</div>
+                        <div class="item-info">
+                            <h4>Alice Smith</h4>
+                            <p>Sent an attachment.</p>
+                        </div>
+                        <span class="time-stamp">Yesterday</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Settings -->
+            <div id="view-settings" class="view-section hidden">
+                <div class="settings-container">
+                    <section class="card settings-card">
+                        <h3>General Settings</h3>
+                        <div class="form-group">
+                            <label>Display Name</label>
+                            <input type="text" value="Kato" class="input-field">
+                        </div>
+                        <div class="form-group">
+                            <label>Theme</label>
+                            <select class="input-field">
+                                <option>Dark Mode</option>
+                                <option>Light Mode</option>
+                            </select>
+                        </div>
+                    </section>
+                    <section class="card settings-card">
+                        <h3>API Configuration</h3>
+                        <div class="form-group">
+                            <label>API ID</label>
+                            <input type="text" value="38605265" class="input-field" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label>Session Status</label>
+                            <div class="status-indicator active">
+                                <span class="dot"></span> Connected
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Other views (Contacts, Agents, Logs) can be similar placeholders -->
+            <div id="view-contacts" class="view-section hidden">
+                <div class="empty-state">
+                    <span class="material-icons-round">contacts</span>
+                    <h3>Contacts View</h3>
+                    <p>Manage your telegram contacts here.</p>
+                </div>
+            </div>
+            <div id="view-agents" class="view-section hidden">
+                <div class="empty-state">
+                    <span class="material-icons-round">smart_toy</span>
+                    <h3>AI Agents</h3>
+                    <p>Configure your autonomous agents.</p>
+                </div>
+            </div>
+            <div id="view-logs" class="view-section hidden">
+                <div class="empty-state">
+                    <span class="material-icons-round">dataset</span>
+                    <h3>System Logs</h3>
+                    <p>View application logs and data.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="app.closeModal(event)">
+        <!-- Create Group Modal -->
+        <div id="modal-create-group" class="modal">
+            <div class="modal-header">
+                <h3>Create New Group</h3>
+                <button class="close-btn" onclick="app.closeModal(null, true)"><span
+                        class="material-icons-round">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Group Name</label>
+                    <input type="text" placeholder="e.g. Marketing Team" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>Add Members (Usernames)</label>
+                    <input type="text" placeholder="@user1, @user2" class="input-field">
+                    <small>Comma separated usernames</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="app.closeModal(null, true)">Cancel</button>
+                <button class="btn-primary">Create Group</button>
+            </div>
+        </div>
+
+        <!-- Add Contact Modal -->
+        <div id="modal-add-contact" class="modal">
+            <div class="modal-header">
+                <h3>Add New Contact</h3>
+                <button class="close-btn" onclick="app.closeModal(null, true)"><span
+                        class="material-icons-round">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" placeholder="+1234567890" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" placeholder="John" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" placeholder="Doe" class="input-field">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="app.closeModal(null, true)">Cancel</button>
+                <button class="btn-primary">Save Contact</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="index.js"></script>
+</body>
+
+</html>
